@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giám định</title>
+  <style>
+    body { font-family: Helvetica, sans-serif; text-align: center; margin: 0; padding: 0; background: #f0f0f0; }
+    h1 { margin: 20px; }
+    .tabs { margin-top: 20px; }
+    .tab-btn { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; background: #ccc; border-radius: 5px; }
+    .tab-btn.active { background: #666; color: white; }
+    .tab-content { display: none; padding: 20px; }
+    .tab-content.active { display: block; }
+    .container { display: flex; justify-content: center; gap: 80px; margin-top: 30px; }
+    .col { display: flex; flex-direction: column; gap: 20px; }
+    .btn { font-size: 32px; font-weight: bold; padding: 20px; width: 200px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.2s; }
+    .btn.red { background: red; color: white; }
+    .btn.blue { background: blue; color: white; }
+    .status {
+      height: 30px;           /* Luôn chiếm 30px chiều cao */
+      font-size: 18px;
+      color: green;
+      margin-bottom: 10px;
+      transition: opacity 0.3s ease;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    label, input { display: block; margin-bottom: 10px; }
+    input { padding: 5px; width: 100%; }
+    button.save-btn { 
+      margin-top: 10px; 
+      width: 100%; 
+      padding: 16px;       /* tăng kích thước vùng bấm */
+      font-size: 18px;     /* chữ to hơn */
+      font-weight: bold;   /* chữ đậm hơn để dễ thấy */
+      border-radius: 8px;  /* bo góc nhẹ nhàng hơn */
+    }
+    .setting-box { max-width: 300px; margin: 0 auto; text-align: left; }
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 15px;
+      justify-content: center;
+      margin: 30px auto;
+    }
+    .btn.number {
+      font-size: 24px;
+      padding: 20px;
+      width: 100px;
+      height: 80px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .btn.number.green {
+      background: #4caf50;
+      color: white;
+    }
+    .btn-large {
+      font-size: 48px;
+      padding: 30px;
+      width: 260px;
+    }
+    .blink {
+      background-color: yellow !important;
+      color: black !important;
+    }
+    .number-pad-container {
+      display: inline-block;
+      border: 3px solid #4caf50;
+      border-radius: 12px;
+      padding: 20px;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    /* Chế độ xoay ngang toàn trang */
+    body.landscape-mode {
+      transform: rotate(90deg);
+      transform-origin: center center;
+      width: 100vh;
+      height: 100vw;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      margin-top: -50vw;
+      margin-left: -50vh;
+      overflow-x: hidden;
+    }
+
+    /* Đảm bảo các tab vẫn hiển thị đúng */
+    body.landscape-mode .tab-content {
+      height: calc(100vh - 120px); /* Trừ đi chiều cao header */
+      overflow-y: auto;
+    }
+
+    /* Căn chỉnh lại header (tiêu đề và nút tab) */
+    body.landscape-mode h1,
+    body.landscape-mode .tabs {
+      transform: rotate(0deg); /* Giữ nguyên hướng chữ */
+      position: relative;
+      z-index: 1000;
+      margin: 0 auto;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Đảm bảo nút không bị méo */
+    body.landscape-mode .btn {
+      transform: rotate(0deg);
+    }
+
+  </style>
+</head>
+<body>
+  <h1 id="judgeTitle">Giám định số 1</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('settingTab', this)">⚙️ Thiết lập</button>
+    <button class="tab-btn" onclick="showTab('scoreTab', this)">📊 Đối kháng</button>
+    <button class="tab-btn" onclick="showTab('performanceTab', this)">🧑‍🎤 Hội diễn</button>
+  </div>
+
+  <!-- Tab Đối kháng -->
+  <div id="scoreTab" class="tab-content">
+    <div class="status" id="status"></div>
+    <div class="container">
+      <div class="col">
+        <button class="btn red btn-large" onclick="sendScore('red', 'punch', this)">🔴 +1</button>
+        <button class="btn red" onclick="sendScore('red', 'kick', this)">🔴 +2</button>
+      </div>
+      <div class="col">
+        <button class="btn blue btn-large" onclick="sendScore('blue', 'punch', this)">🔵 +1</button>
+        <button class="btn blue" onclick="sendScore('blue', 'kick', this)">🔵 +2</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Thiết lập -->
+  <div id="settingTab" class="tab-content active">
+    <div class="setting-box">
+
+      <label>🔢 Nhập số giám định (1-5):</label>
+      <input type="number" id="judgeId" min="1" max="5" value="1">
+
+      <button class="save-btn" onclick="applySettings()">💾 XÁC NHẬN CÀI ĐẶT</button>
+      <div class="status" id="settingStatus"></div>
+    </div>
+    <div style="margin-top: 30px; text-align: center;">
+      <button class="btn" style="background: orange; color: white; margin-right: 40px;" onclick="showTabDirect('performanceTab')">🧑‍🎤 HỘI DIỄN</button>
+      <button class="btn" style="background: teal; color: white; margin-left: 40px;" onclick="showTabDirect('scoreTab')">⚔️ ĐỐI KHÁNG</button>
+    </div>
+  </div>
+  <!-- Tab Hội diễn -->
+  <div id="performanceTab" class="tab-content">
+    <h2>🎯 Chấm điểm Hội diễn</h2>
+
+    <p>👤 Giám định số: <strong id="judgeLabel">1</strong></p>
+
+    <div id="perfDisplay" style="font-size: 80px; margin: 20px;">0</div>
+
+    <!-- KHUNG BÀN PHÍM -->
+    <div class="number-pad-container">
+      <div class="number-grid">
+        <button class="btn number" onclick="appendDigit(1)">1</button>
+        <button class="btn number" onclick="appendDigit(2)">2</button>
+        <button class="btn number" onclick="appendDigit(3)">3</button>
+        <button class="btn number" onclick="appendDigit(4)">4</button>
+        <button class="btn number" onclick="appendDigit(5)">5</button>
+        <button class="btn number" onclick="appendDigit(6)">6</button>
+        <button class="btn number" onclick="appendDigit(7)">7</button>
+        <button class="btn number" onclick="appendDigit(8)">8</button>
+        <button class="btn number" onclick="appendDigit(9)">9</button>
+        <button class="btn number" onclick="clearDigit()">⌫</button>
+        <button class="btn number" onclick="appendDigit(0)">0</button>
+        <button id="submitPerfBtn" class="btn number green" onclick="submitPerfScore()">✅</button>
+      </div>
+    </div>
+
+    <!-- THÔNG BÁO TRẠNG THÁI -->
+    <div class="status" id="statusPerf"></div>
+  </div>
+  <script>
+      const API_URL = "https://giamthiwellspring.site/api/send";  
+      let serverIP = "INTERNET"; // không còn dùng
+      let judgeId = 1;
+      let isConfigured = false;
+
+      function showTab(tabId, buttonElement) {
+        // Nếu là tab Đối kháng hoặc Hội diễn thì kiểm tra cài đặt
+        if ((tabId === "scoreTab" || tabId === "performanceTab") && !checkAndApplySettings()) {
+          // Nếu không đủ thông tin thì quay lại tab Thiết lập
+          document.getElementById("settingStatus").textContent = "⚠️ Vui lòng nhập đúng IP và số giám định (1-5) trước khi sử dụng";
+          showTabDirect("settingTab");
+          return;
+        }
+        
+        document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        document.getElementById(tabId).classList.add("active");
+        buttonElement.classList.add("active");
+
+        // Xoay toàn bộ trang nếu là tab Đối kháng
+        if (tabId === "scoreTab") {
+          document.body.classList.add("landscape-mode");
+        } else {
+          document.body.classList.remove("landscape-mode");
+        }
+      }
+
+      function checkAndApplySettings() {
+        const judgeInput = parseInt(document.getElementById("judgeId").value);
+        if (!isNaN(judgeInput) && judgeInput >= 1 && judgeInput <= 5) {
+          judgeId = judgeInput;
+          isConfigured = true;
+          document.getElementById("judgeTitle").textContent = `Giám định số ${judgeId}`;
+          document.getElementById("judgeLabel").textContent = judgeId;
+          return true;
+        }
+        return false;
+      }
+
+
+      function applySettings() {
+        const judgeInput = parseInt(document.getElementById("judgeId").value);
+
+        if (isNaN(judgeInput) || judgeInput < 1 || judgeInput > 5) {
+          document.getElementById("settingStatus").textContent =
+            "❌ Vui lòng nhập số giám định (1-5)";
+          isConfigured = false;
+          return;
+        }
+
+        judgeId = judgeInput;
+        isConfigured = true;
+
+        document.getElementById("judgeTitle").textContent = `Giám định số ${judgeId}`;
+        document.getElementById("judgeLabel").textContent = judgeId;
+        document.getElementById("settingStatus").textContent =
+          `✅ Giám định số ${judgeId}`;
+
+        localStorage.setItem("lastJudgeId", judgeId.toString());
+      }
+
+      let perfCurrent = "";
+
+      function appendDigit(d) {
+        if (perfCurrent.length >= 2) {
+          // Nếu đã 2 chữ số, bỏ chữ số đầu tiên rồi thêm số mới
+          perfCurrent = perfCurrent.slice(1) + d.toString();
+        } else {
+          perfCurrent += d.toString();
+        }
+        document.getElementById("perfDisplay").textContent = perfCurrent;
+      }
+
+      function clearDigit() {
+        perfCurrent = perfCurrent.slice(0, -1);
+        document.getElementById("perfDisplay").textContent = perfCurrent || "0";
+      }
+
+      function submitPerfScore() {
+        const status = document.getElementById("statusPerf");
+        const score = parseInt(perfCurrent);
+        const btn = document.getElementById("submitPerfBtn");
+
+        if (!isConfigured) {
+          status.textContent = "⚠️ Vui lòng thiết lập IP và GĐ.";
+          return;
+        }
+        if (isNaN(score) || score < 0 || score > 99) {
+          status.textContent = "❌ Điểm không hợp lệ.";
+          return;
+        }
+
+        // Hiệu ứng nhấp nháy + rung
+        btn.classList.add("blink");
+
+        if (window.AppInventor) {
+          window.AppInventor.setWebViewString("vibrate");
+        } else if (navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+
+
+        setTimeout(() => btn.classList.remove("blink"), 200);
+
+
+        const payload = {
+          type: "performance",
+          judge: judgeId,
+          score: score
+        };
+        fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+          .then(response => {
+            if (!response.ok) throw new Error();
+            return response.text();
+          })
+          .then(text => {
+            status.textContent = "✅ Gửi điểm thành công.";
+            document.getElementById("status").textContent = "";
+            // Giữ nguyên điểm sau khi gửi thành công
+            setTimeout(() => status.textContent = "", 2000);
+          })
+          .catch(() => {
+            status.textContent = "❌ Không gửi được điểm.";
+            status.style.color = "red";
+            setTimeout(() => status.textContent = "", 3000);
+          });
+      }
+
+      function sendScore(competitor, type, btn) {
+        const status = document.getElementById("status");
+        status.textContent = "";
+
+        if (!isConfigured) {
+          status.textContent = "⚠️ Vui lòng thiết lập GĐ trước khi chấm điểm.";
+          return;
+        }
+
+        // Nháy nút
+        btn.classList.add("blink");
+
+        // Rung
+        if (window.AppInventor) {
+          window.AppInventor.setWebViewString("vibrate");
+        } else if (navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+
+        setTimeout(() => btn.classList.remove("blink"), 200);
+
+        fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "combat",
+            judge: judgeId,
+            team: competitor,
+            action: type
+          })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error();
+            return res.json();
+          })
+          .then(() => {
+            status.textContent = "✅ Gửi điểm thành công";
+            status.style.color = "green";
+            setTimeout(() => status.textContent = "", 2000);
+          })
+          .catch(() => {
+            status.textContent = "❌ Không gửi được điểm.";
+            status.style.color = "red";
+            setTimeout(() => status.textContent = "", 3000);
+          });
+      }
+
+
+      // Hàm cập nhật trạng thái mạng
+      function updateNetworkStatus() {
+        const status = document.getElementById("status");
+        if (!navigator.onLine) {
+          status.textContent = "❌ Mất kết nối";
+          status.style.color = "red";
+        } else {
+          // Nếu muốn xóa dòng mất kết nối khi có mạng trở lại:
+          status.textContent = "";
+          status.style.color = "green";
+        }
+      }
+
+      // Lắng nghe sự kiện thay đổi mạng
+      window.addEventListener("online", updateNetworkStatus);
+      window.addEventListener("offline", updateNetworkStatus);
+
+      // Gọi lần đầu khi trang mở
+      updateNetworkStatus();
+
+      function showTabDirect(tabId) {
+        // Nếu là tab Đối kháng hoặc Hội diễn thì kiểm tra cài đặt
+        if ((tabId === "scoreTab" || tabId === "performanceTab") && !checkAndApplySettings()) {
+          // Nếu không đủ thông tin thì quay lại tab Thiết lập
+          document.getElementById("settingStatus").textContent = "⚠️ Vui lòng nhập đúng IP và số giám định (1-5) trước khi sử dụng";
+          tabId = "settingTab";
+        }
+        
+        document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+        document.getElementById(tabId).classList.add("active");
+
+        // Xoay toàn bộ trang nếu là tab Đối kháng
+        if (tabId === "scoreTab") {
+          document.body.classList.add("landscape-mode");
+        } else {
+          document.body.classList.remove("landscape-mode");
+        }
+
+        // Cập nhật active tab button
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        if (tabId === "settingTab") {
+          document.querySelectorAll(".tab-btn")[0].classList.add("active");
+        } else if (tabId === "scoreTab") {
+          document.querySelectorAll(".tab-btn")[1].classList.add("active");
+        } else if (tabId === "performanceTab") {
+          document.querySelectorAll(".tab-btn")[2].classList.add("active");
+        }
+      }
+  </script>  
+
+
+</body>
+</html>
