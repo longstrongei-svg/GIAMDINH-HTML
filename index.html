@@ -185,7 +185,13 @@
       const API_URL = "https://giamthiwellspring.site/api/send";  
       let serverIP = "INTERNET"; // không còn dùng
       let judgeId = 1;
+      let sanId = 1;   // <<< THÊM
       let isConfigured = false;
+
+      // ĐỌC SÂN TỪ URL
+      const params = new URLSearchParams(window.location.search);
+      sanId = parseInt(params.get("san")) || 1;
+
 
       function showTab(tabId, buttonElement) {
         // Nếu là tab Đối kháng hoặc Hội diễn thì kiểm tra cài đặt
@@ -214,7 +220,8 @@
         if (!isNaN(judgeInput) && judgeInput >= 1 && judgeInput <= 5) {
           judgeId = judgeInput;
           isConfigured = true;
-          document.getElementById("judgeTitle").textContent = `Giám định số ${judgeId}`;
+          document.getElementById("judgeTitle").textContent =
+            `SÂN ${sanId} - Giám định số ${judgeId}`;
           document.getElementById("judgeLabel").textContent = judgeId;
           return true;
         }
@@ -235,7 +242,8 @@
         judgeId = judgeInput;
         isConfigured = true;
 
-        document.getElementById("judgeTitle").textContent = `Giám định số ${judgeId}`;
+        document.getElementById("judgeTitle").textContent =
+          `SÂN ${sanId} - Giám định số ${judgeId}`;
         document.getElementById("judgeLabel").textContent = judgeId;
         document.getElementById("settingStatus").textContent =
           `✅ Giám định số ${judgeId}`;
@@ -289,9 +297,11 @@
 
         const payload = {
           type: "performance",
+          san: sanId,          // <<< THÊM
           judge: judgeId,
           score: score
         };
+
         fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -340,6 +350,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "combat",
+            san: sanId,          // <<< THÊM
             judge: judgeId,
             team: competitor,
             action: type
