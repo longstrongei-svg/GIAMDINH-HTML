@@ -220,13 +220,25 @@
         if (!isNaN(judgeInput) && judgeInput >= 1 && judgeInput <= 5) {
           judgeId = judgeInput;
           isConfigured = true;
-          document.getElementById("judgeTitle").textContent =
-            `SÂN ${sanId} - Giám định số ${judgeId}`;
+          updateHeader();
           document.getElementById("judgeLabel").textContent = judgeId;
           return true;
         }
         return false;
       }
+
+
+      function updateHeader() {
+        const judgeText = isConfigured
+          ? `Giám định số ${judgeId}`
+          : `Giám định (chưa chọn)`;
+
+        document.getElementById("judgeTitle").textContent =
+          `SÂN ${sanId} - ${judgeText}`;
+      }
+      document.addEventListener("DOMContentLoaded", () => {
+        updateHeader();
+      });
 
 
       function applySettings() {
@@ -236,20 +248,21 @@
           document.getElementById("settingStatus").textContent =
             "❌ Vui lòng nhập số giám định (1-5)";
           isConfigured = false;
+          updateHeader();
           return;
         }
 
         judgeId = judgeInput;
         isConfigured = true;
 
-        document.getElementById("judgeTitle").textContent =
-          `SÂN ${sanId} - Giám định số ${judgeId}`;
         document.getElementById("judgeLabel").textContent = judgeId;
         document.getElementById("settingStatus").textContent =
           `✅ Giám định số ${judgeId}`;
 
         localStorage.setItem("lastJudgeId", judgeId.toString());
+        updateHeader();
       }
+
 
       let perfCurrent = "";
 
