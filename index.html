@@ -182,7 +182,10 @@
     <div class="status" id="statusPerf"></div>
   </div>
   <script>
-      const API_URL = "https://giamthiwellspring.site/api/send";  
+      const API_URL =
+        location.protocol === "file:"
+          ? "http://127.0.0.1:5002/api/receive"  // ✅ chạy local (Cloudflare local service)
+          : `${location.origin}/api/receive`;     // ✅ khi chạy qua domain/tunnel
       let serverIP = "INTERNET"; // không còn dùng
       let judgeId = 1;
       let sanId = 1;   // <<< THÊM
