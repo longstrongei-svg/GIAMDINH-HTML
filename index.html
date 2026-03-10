@@ -285,58 +285,50 @@
       }
 
       function submitPerfScore() {
-        const status = document.getElementById("statusPerf");
-        const score = parseInt(perfCurrent);
-        const btn = document.getElementById("submitPerfBtn");
+          const status = document.getElementById("statusPerf");
+          const score = parseInt(perfCurrent);
+          const btn = document.getElementById("submitPerfBtn");
 
-        if (!isConfigured) {
-          status.textContent = "⚠️ Vui lòng thiết lập IP và GĐ.";
-          return;
-        }
-        if (isNaN(score) || score < 0 || score > 99) {
-          status.textContent = "❌ Điểm không hợp lệ.";
-          return;
-        }
+          if (!isConfigured) {
+              status.textContent = "⚠️ Vui lòng thiết lập GĐ.";
+              return;
+          }
+          if (isNaN(score) || score < 0 || score > 99) {
+              status.textContent = "❌ Điểm không hợp lệ.";
+              return;
+          }
 
-        // Hiệu ứng nhấp nháy + rung
-        btn.classList.add("blink");
+          // Hiệu ứng nhấp nháy + rung
+          btn.classList.add("blink");
+          if (navigator.vibrate) {
+              navigator.vibrate(100);
+          }
+          setTimeout(() => btn.classList.remove("blink"), 200);
 
-        if (window.AppInventor) {
-          window.AppInventor.setWebViewString("vibrate");
-        } else if (navigator.vibrate) {
-          navigator.vibrate(100);
-        }
+          const payload = {
+              type: "performance",
+              san: sanId,
+              judge: judgeId,  // judgeId được lấy từ thiết lập (1-5)
+              score: score
+          };
 
-
-        setTimeout(() => btn.classList.remove("blink"), 200);
-
-
-        const payload = {
-          type: "performance",
-          san: sanId,          // <<< THÊM
-          judge: judgeId,
-          score: score
-        };
-
-        fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        })
+          fetch(API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+          })
           .then(response => {
-            if (!response.ok) throw new Error();
-            return response.text();
+              if (!response.ok) throw new Error();
+              return response.text();
           })
           .then(text => {
-            status.textContent = "✅ Gửi điểm thành công.";
-            document.getElementById("status").textContent = "";
-            // Giữ nguyên điểm sau khi gửi thành công
-            setTimeout(() => status.textContent = "", 2000);
+              status.textContent = "✅ Gửi điểm thành công.";
+              setTimeout(() => status.textContent = "", 2000);
           })
           .catch(() => {
-            status.textContent = "❌ Không gửi được điểm.";
-            status.style.color = "red";
-            setTimeout(() => status.textContent = "", 3000);
+              status.textContent = "❌ Không gửi được điểm.";
+              status.style.color = "red";
+              setTimeout(() => status.textContent = "", 3000);
           });
       }
 
